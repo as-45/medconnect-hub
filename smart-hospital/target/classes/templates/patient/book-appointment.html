@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Book Appointment – Smart Hospital</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #F0F4F8; color: #111827; }
+
+        .sidebar {
+            position: fixed; top: 0; left: 0;
+            width: 240px; height: 100vh;
+            background: #0D2B4E; color: #fff;
+            display: flex; flex-direction: column; z-index: 100;
+        }
+        .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo .icon {
+            width: 40px; height: 40px; background: #1565C0; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: #fff; margin-bottom: 8px;
+        }
+        .sidebar-logo h2 { font-size: 15px; font-weight: 700; }
+        .sidebar-logo p  { font-size: 11px; color: #93C5FD; margin-top: 2px; }
+        .sidebar nav { flex: 1; padding: 16px 0; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 20px; font-size: 14px; color: #CBD5E0;
+            text-decoration: none; transition: all 0.2s;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: rgba(255,255,255,0.08); color: #fff;
+            border-left: 3px solid #60A5FA;
+        }
+        .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .avatar {
+            width: 36px; height: 36px; border-radius: 50%; background: #1565C0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 700; color: #fff;
+        }
+        .user-name { font-size: 13px; font-weight: 600; }
+        .user-role { font-size: 11px; color: #93C5FD; }
+        .btn-logout {
+            display: block; width: 100%; padding: 8px;
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 6px; color: #CBD5E0; text-align: center;
+            font-size: 13px; text-decoration: none;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+        .main { margin-left: 240px; padding: 32px; }
+        .page-header { margin-bottom: 24px; }
+        .page-header h1 { font-size: 24px; font-weight: 700; color: #0D2B4E; }
+        .page-header p  { font-size: 14px; color: #6B7280; margin-top: 4px; }
+
+        .two-col { display: grid; grid-template-columns: 1fr 1.5fr; gap: 24px; }
+
+        .card {
+            background: #fff; border-radius: 10px;
+            border: 1px solid #E5E7EB; padding: 24px;
+        }
+        .card-title {
+            font-size: 16px; font-weight: 700; color: #0D2B4E;
+            margin-bottom: 18px;
+            border-bottom: 2px solid #DBEAFE; padding-bottom: 10px;
+        }
+
+        /* Doctor profile card */
+        .doc-avatar {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: #1565C0; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 28px; font-weight: 700; color: #fff;
+            margin: 0 auto 14px;
+        }
+        .doc-name { text-align: center; font-size: 18px; font-weight: 700; color: #0D2B4E; }
+        .doc-spec { text-align: center; font-size: 14px; color: #1565C0; font-weight: 600; margin-bottom: 18px; }
+
+        .info-row {
+            display: flex; justify-content: space-between;
+            padding: 9px 0; border-bottom: 1px solid #F3F4F6;
+            font-size: 14px;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-row .key { color: #6B7280; }
+        .info-row .val { color: #0D2B4E; font-weight: 600; }
+
+        /* Time slots */
+        .slot-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 10px; margin-top: 10px;
+        }
+        .slot-btn {
+            padding: 10px 6px; text-align: center;
+            border: 1.5px solid #D1D5DB; border-radius: 7px;
+            font-size: 13px; font-weight: 600; color: #374151;
+            cursor: pointer; transition: all 0.2s; background: #fff;
+        }
+        .slot-btn:hover { border-color: #1565C0; background: #EFF6FF; color: #1565C0; }
+        .slot-btn.selected { border-color: #1565C0; background: #1565C0; color: #fff; }
+        .slot-btn.taken { background: #F3F4F6; color: #D1D5DB; cursor: not-allowed; border-color: #E5E7EB; }
+
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        input[type="date"], textarea, select {
+            width: 100%; padding: 10px 14px;
+            border: 1.5px solid #D1D5DB; border-radius: 8px;
+            font-size: 14px; color: #111827; outline: none;
+            transition: border-color 0.2s; background: #fff;
+        }
+        input[type="date"]:focus,
+        textarea:focus, select:focus { border-color: #1565C0; }
+        textarea { resize: vertical; min-height: 80px; }
+
+        .alert-error {
+            background: #FEE2E2; color: #991B1B;
+            border: 1px solid #FCA5A5; border-radius: 8px;
+            padding: 10px 14px; font-size: 13px; margin-bottom: 16px;
+        }
+        .alert-success {
+            background: #D1FAE5; color: #065F46;
+            border: 1px solid #6EE7B7; border-radius: 8px;
+            padding: 10px 14px; font-size: 13px; margin-bottom: 16px;
+        }
+
+        .btn-primary {
+            width: 100%; padding: 12px;
+            background: #1565C0; color: #fff;
+            border: none; border-radius: 8px; font-size: 15px;
+            font-weight: 600; cursor: pointer; transition: background 0.2s;
+        }
+        .btn-primary:hover { background: #0D47A1; }
+        .btn-back {
+            display: inline-block; margin-bottom: 20px;
+            font-size: 13px; color: #1565C0; text-decoration: none;
+            font-weight: 600;
+        }
+        .btn-back:hover { text-decoration: underline; }
+
+        .section-label {
+            font-size: 13px; font-weight: 700; color: #1565C0;
+            margin-bottom: 10px; margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <div class="icon">+</div>
+        <h2>Smart Hospital</h2>
+        <p>Patient Portal</p>
+    </div>
+    <nav>
+        <a th:href="@{/patient/dashboard}"       class="nav-item">&#9632; Dashboard</a>
+        <a th:href="@{/patient/doctors}"          class="nav-item active">&#9670; Find Doctors</a>
+        <a th:href="@{/patient/appointments}"     class="nav-item">&#9671; My Appointments</a>
+        <a th:href="@{/patient/medical-records}"  class="nav-item">&#9633; Medical Records</a>
+        <a th:href="@{/patient/bills}"            class="nav-item">&#9651; My Bills</a>
+        <a th:href="@{/patient/profile}"          class="nav-item">&#9675; My Profile</a>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <div class="avatar" th:text="${#strings.substring(patient.name,0,1)}">P</div>
+            <div>
+                <div class="user-name" th:text="${patient.name}">Patient</div>
+                <div class="user-role">Patient</div>
+            </div>
+        </div>
+        <a th:href="@{/logout}" class="btn-logout">Sign Out</a>
+    </div>
+</div>
+
+<div class="main">
+    <a th:href="@{/patient/doctors}" class="btn-back">&#8592; Back to Doctors</a>
+
+    <div class="page-header">
+        <h1>Book an Appointment</h1>
+        <p>Select a date and time slot to confirm your booking.</p>
+    </div>
+
+    <div class="alert-error"   th:if="${error}"   th:text="${error}"></div>
+    <div class="alert-success" th:if="${success}" th:text="${success}"></div>
+
+    <div class="two-col">
+
+        <!-- Doctor Info -->
+        <div class="card">
+            <div class="card-title">Doctor Details</div>
+            <div class="doc-avatar" th:text="${#strings.substring(doctor.name,0,1)}">D</div>
+            <div class="doc-name"   th:text="${doctor.name}">Dr. Name</div>
+            <div class="doc-spec"   th:text="${doctor.specialisation}">Specialisation</div>
+
+            <div class="info-row">
+                <span class="key">Phone</span>
+                <span class="val" th:text="${doctor.phone}">—</span>
+            </div>
+            <div class="info-row">
+                <span class="key">Available Days</span>
+                <span class="val" th:text="${doctor.availableDays}">—</span>
+            </div>
+        </div>
+
+        <!-- Booking Form -->
+        <div class="card">
+            <div class="card-title">Appointment Details</div>
+
+            <form th:action="@{/patient/book-appointment/{id}(id=${doctor.doctorId})}"
+                  th:object="${appointmentDto}" method="post">
+                <!-- CSRF token removed -->
+                <input type="hidden" id="selectedTime" name="appointmentTime" th:field="*{appointmentTime}"/>
+
+                <div class="form-group">
+                    <label>Select Date</label>
+                    <input type="date" th:field="*{appointmentDate}"
+                           th:min="${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}"
+                           onchange="loadSlots(this.value)" required/>
+                </div>
+
+                <div class="section-label">Select Time Slot</div>
+                <div class="slot-grid" id="slotGrid">
+                    <div style="grid-column:1/-1;text-align:center;color:#9CA3AF;font-size:13px;padding:16px;">
+                        Please select a date first
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top:20px;">
+                    <label>Reason for Visit (optional)</label>
+                    <textarea th:field="*{reason}" placeholder="Briefly describe your symptoms or reason..."></textarea>
+                </div>
+
+                <button type="submit" class="btn-primary">Confirm Booking</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const bookedSlots = /*[[${bookedSlots}]]*/ [];
+
+    const allSlots = [
+        "09:00","09:30","10:00","10:30","11:00","11:30",
+        "14:00","14:30","15:00","15:30","16:00","16:30"
+    ];
+
+    function loadSlots(date) {
+        const grid = document.getElementById('slotGrid');
+        if (!date) { grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:#9CA3AF;font-size:13px;padding:16px;">Please select a date first</div>'; return; }
+
+        grid.innerHTML = '';
+        allSlots.forEach(slot => {
+            const taken = bookedSlots.includes(slot);
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = slot;
+            btn.className = 'slot-btn' + (taken ? ' taken' : '');
+            if (!taken) {
+                btn.onclick = function() {
+                    document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    document.getElementById('selectedTime').value = slot + ':00';
+                };
+            }
+            grid.appendChild(btn);
+        });
+    }
+</script>
+</body>
+</html>

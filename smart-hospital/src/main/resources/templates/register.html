@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Register – Smart Hospital</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f0f4f8;
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 40px 16px;
+        }
+        .container {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+            padding: 48px 40px 40px;
+            width: 100%; max-width: 480px;
+        }
+        .logo { text-align: center; margin-bottom: 28px; }
+        .logo .icon {
+            width: 56px; height: 56px; background: #1565C0;
+            border-radius: 50%; display: flex;
+            align-items: center; justify-content: center;
+            margin: 0 auto 12px; font-size: 26px; color: #fff;
+        }
+        .logo h1 { font-size: 22px; color: #0D2B4E; font-weight: 700; }
+        .logo p  { font-size: 13px; color: #6b7280; margin-top: 4px; }
+
+        .section-title {
+            font-size: 13px; font-weight: 700; color: #1565C0;
+            text-transform: uppercase; letter-spacing: 0.06em;
+            margin: 24px 0 12px;
+            border-bottom: 2px solid #BBDEFB; padding-bottom: 4px;
+        }
+
+        .alert-error {
+            background: #FEE2E2; color: #991B1B;
+            border: 1px solid #FCA5A5;
+            border-radius: 8px; padding: 10px 14px;
+            font-size: 13px; margin-bottom: 16px;
+        }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 5px; }
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="date"],
+        input[type="tel"],
+        select, textarea {
+            width: 100%; padding: 10px 14px;
+            border: 1.5px solid #D1D5DB;
+            border-radius: 8px; font-size: 14px; color: #111827;
+            outline: none; transition: border-color 0.2s;
+            background: #fff;
+        }
+        input:focus, select:focus, textarea:focus { border-color: #1565C0; }
+        textarea { resize: vertical; min-height: 70px; }
+
+        .role-toggle {
+            display: flex; gap: 10px; margin-bottom: 4px;
+        }
+        .role-btn {
+            flex: 1; padding: 10px;
+            border: 2px solid #D1D5DB; border-radius: 8px;
+            background: #fff; font-size: 13px; font-weight: 600;
+            color: #6B7280; cursor: pointer; transition: all 0.2s;
+            text-align: center;
+        }
+        .role-btn.active {
+            border-color: #1565C0; background: #E3F2FD; color: #1565C0;
+        }
+
+        .btn-primary {
+            width: 100%; padding: 12px;
+            background: #1565C0; color: #fff;
+            border: none; border-radius: 8px;
+            font-size: 15px; font-weight: 600;
+            cursor: pointer; transition: background 0.2s;
+            margin-top: 8px;
+        }
+        .btn-primary:hover { background: #0D47A1; }
+
+        .login-link { text-align: center; font-size: 13px; color: #6B7280; margin-top: 18px; }
+        .login-link a { color: #1565C0; font-weight: 600; text-decoration: none; }
+        .login-link a:hover { text-decoration: underline; }
+
+        /* Show/hide doctor fields */
+        #doctorFields { display: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="logo">
+        <div class="icon">+</div>
+        <h1>Create Account</h1>
+        <p>Smart Hospital Management System</p>
+    </div>
+
+    <div class="alert-error" th:if="${error}" th:text="${error}"></div>
+
+    <form th:action="@{/register}" th:object="${userDto}" method="post">
+        <!-- CSRF token removed -->
+
+        <!-- Role selector -->
+        <div class="section-title">I am a</div>
+        <div class="role-toggle">
+            <div class="role-btn active" id="btn-patient" onclick="setRole('PATIENT')">Patient</div>
+            <div class="role-btn"        id="btn-doctor"  onclick="setRole('DOCTOR')">Doctor</div>
+        </div>
+        <input type="hidden" id="roleInput" name="role" th:field="*{role}" value="PATIENT"/>
+
+        <!-- Basic info -->
+        <div class="section-title">Basic Information</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>First Name</label>
+                <input type="text" th:field="*{firstName}" placeholder="Priya" required/>
+                <span style="color:#DC2626;font-size:12px;" th:if="${#fields.hasErrors('firstName')}"
+                      th:errors="*{firstName}"></span>
+            </div>
+            <div class="form-group">
+                <label>Last Name</label>
+                <input type="text" th:field="*{lastName}" placeholder="Sharma" required/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" th:field="*{email}" placeholder="you@example.com" required/>
+            <span style="color:#DC2626;font-size:12px;" th:if="${#fields.hasErrors('email')}"
+                  th:errors="*{email}"></span>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" th:field="*{password}" placeholder="Min 8 characters" required/>
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" th:field="*{phone}" placeholder="9876543210"/>
+            </div>
+        </div>
+
+        <!-- Patient fields -->
+        <div id="patientFields">
+            <div class="section-title">Patient Details</div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Date of Birth</label>
+                    <input type="date" th:field="*{dateOfBirth}"/>
+                </div>
+                <div class="form-group">
+                    <label>Blood Group</label>
+                    <select th:field="*{bloodGroup}">
+                        <option value="">Select</option>
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Address</label>
+                <textarea th:field="*{address}" placeholder="Enter your full address"></textarea>
+            </div>
+        </div>
+
+        <!-- Doctor fields (hidden by default) -->
+        <div id="doctorFields">
+            <div class="section-title">Doctor Details</div>
+            <div class="form-group">
+                <label>Specialisation</label>
+                <input type="text" th:field="*{specialisation}" placeholder="e.g. Cardiology"/>
+            </div>
+            <div class="form-group">
+                <label>Available Days</label>
+                <input type="text" th:field="*{availableDays}" placeholder="e.g. Monday, Wednesday, Friday"/>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-primary">Create Account</button>
+    </form>
+
+    <div class="login-link">
+        Already have an account? <a th:href="@{/login}">Sign in here</a>
+    </div>
+</div>
+
+<script>
+    function setRole(role) {
+        document.getElementById('roleInput').value = role;
+        document.getElementById('btn-patient').classList.toggle('active', role === 'PATIENT');
+        document.getElementById('btn-doctor').classList.toggle('active',  role === 'DOCTOR');
+        document.getElementById('patientFields').style.display = role === 'PATIENT' ? 'block' : 'none';
+        document.getElementById('doctorFields').style.display  = role === 'DOCTOR'  ? 'block' : 'none';
+    }
+    // Pre-select from server-side model if validation failed
+    window.onload = function() {
+        const roleVal = document.getElementById('roleInput').value;
+        if (roleVal) setRole(roleVal);
+    };
+</script>
+</body>
+</html>

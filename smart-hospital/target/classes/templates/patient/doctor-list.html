@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Find Doctors – Smart Hospital</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #F0F4F8; color: #111827; }
+
+        .sidebar {
+            position: fixed; top: 0; left: 0;
+            width: 240px; height: 100vh;
+            background: #0D2B4E; color: #fff;
+            display: flex; flex-direction: column; z-index: 100;
+        }
+        .sidebar-logo { padding: 24px 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo .icon {
+            width: 40px; height: 40px; background: #1565C0; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; color: #fff; margin-bottom: 8px;
+        }
+        .sidebar-logo h2 { font-size: 15px; font-weight: 700; }
+        .sidebar-logo p  { font-size: 11px; color: #93C5FD; margin-top: 2px; }
+        .sidebar nav { flex: 1; padding: 16px 0; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 20px; font-size: 14px; color: #CBD5E0;
+            text-decoration: none; transition: all 0.2s;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: rgba(255,255,255,0.08); color: #fff;
+            border-left: 3px solid #60A5FA;
+        }
+        .sidebar-footer { padding: 16px 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .avatar {
+            width: 36px; height: 36px; border-radius: 50%; background: #1565C0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 700; color: #fff;
+        }
+        .user-name { font-size: 13px; font-weight: 600; }
+        .user-role { font-size: 11px; color: #93C5FD; }
+        .btn-logout {
+            display: block; width: 100%; padding: 8px;
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 6px; color: #CBD5E0; text-align: center;
+            font-size: 13px; text-decoration: none;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+        .main { margin-left: 240px; padding: 32px; }
+        .page-header { margin-bottom: 24px; }
+        .page-header h1 { font-size: 24px; font-weight: 700; color: #0D2B4E; }
+        .page-header p  { font-size: 14px; color: #6B7280; margin-top: 4px; }
+
+        /* Search / filter bar */
+        .filter-bar {
+            background: #fff; border-radius: 10px;
+            border: 1px solid #E5E7EB; padding: 18px 20px;
+            display: flex; gap: 14px; align-items: flex-end;
+            margin-bottom: 24px; flex-wrap: wrap;
+        }
+        .filter-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 160px; }
+        .filter-group label { font-size: 12px; font-weight: 600; color: #374151; }
+        .filter-group input,
+        .filter-group select {
+            padding: 9px 12px; border: 1.5px solid #D1D5DB;
+            border-radius: 7px; font-size: 14px; color: #111827;
+            outline: none;
+        }
+        .filter-group input:focus,
+        .filter-group select:focus { border-color: #1565C0; }
+        .btn-search {
+            padding: 10px 24px; background: #1565C0; color: #fff;
+            border: none; border-radius: 7px; font-size: 14px;
+            font-weight: 600; cursor: pointer; transition: background 0.2s;
+        }
+        .btn-search:hover { background: #0D47A1; }
+
+        /* Doctor cards grid */
+        .doctors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 18px;
+        }
+        .doctor-card {
+            background: #fff; border-radius: 10px;
+            border: 1px solid #E5E7EB; padding: 22px;
+            transition: box-shadow 0.2s;
+        }
+        .doctor-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+
+        .doctor-avatar {
+            width: 60px; height: 60px; border-radius: 50%;
+            background: #1565C0; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 22px; font-weight: 700; color: #fff;
+            margin: 0 auto 14px;
+        }
+        .doctor-name {
+            text-align: center; font-size: 16px;
+            font-weight: 700; color: #0D2B4E; margin-bottom: 4px;
+        }
+        .doctor-spec {
+            text-align: center; font-size: 13px; color: #1565C0;
+            font-weight: 600; margin-bottom: 14px;
+        }
+        .doctor-detail {
+            font-size: 13px; color: #6B7280;
+            padding: 6px 0; border-bottom: 1px solid #F3F4F6;
+            display: flex; justify-content: space-between;
+        }
+        .doctor-detail:last-of-type { border-bottom: none; }
+        .doctor-detail .key { font-weight: 500; }
+        .doctor-detail .val { color: #374151; font-weight: 600; }
+
+        .btn-book {
+            display: block; width: 100%; margin-top: 16px;
+            padding: 10px; background: #1565C0; color: #fff;
+            border: none; border-radius: 7px; font-size: 14px;
+            font-weight: 600; text-align: center;
+            text-decoration: none; cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-book:hover { background: #0D47A1; }
+
+        .empty-state {
+            grid-column: 1 / -1; text-align: center;
+            padding: 48px; color: #9CA3AF; font-size: 15px;
+        }
+
+        .result-count {
+            font-size: 14px; color: #6B7280; margin-bottom: 16px;
+        }
+        .result-count span { font-weight: 700; color: #0D2B4E; }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <div class="icon">+</div>
+        <h2>Smart Hospital</h2>
+        <p>Patient Portal</p>
+    </div>
+    <nav>
+        <a th:href="@{/patient/dashboard}"        class="nav-item">&#9632; Dashboard</a>
+        <a th:href="@{/patient/doctors}"           class="nav-item active">&#9670; Find Doctors</a>
+        <a th:href="@{/patient/appointments}"      class="nav-item">&#9671; My Appointments</a>
+        <a th:href="@{/patient/medical-records}"   class="nav-item">&#9633; Medical Records</a>
+        <a th:href="@{/patient/bills}"             class="nav-item">&#9651; My Bills</a>
+        <a th:href="@{/patient/profile}"           class="nav-item">&#9675; My Profile</a>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <div class="avatar" th:text="${#strings.substring(patient.name,0,1)}">P</div>
+            <div>
+                <div class="user-name" th:text="${patient.name}">Patient</div>
+                <div class="user-role">Patient</div>
+            </div>
+        </div>
+        <a th:href="@{/logout}" class="btn-logout">Sign Out</a>
+    </div>
+</div>
+
+<div class="main">
+    <div class="page-header">
+        <h1>Find a Doctor</h1>
+        <p>Search and book an appointment with our specialists.</p>
+    </div>
+
+    <!-- Search / Filter -->
+    <form th:action="@{/patient/doctors}" method="get">
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label>Search by Name</label>
+                <input type="text" name="name" th:value="${searchName}" placeholder="Dr. Ramesh..."/>
+            </div>
+            <div class="filter-group">
+                <label>Specialisation</label>
+                <select name="specialisation">
+                    <option value="">All Specialisations</option>
+                    <option value="Cardiology"       th:selected="${searchSpec == 'Cardiology'}">Cardiology</option>
+                    <option value="Dermatology"      th:selected="${searchSpec == 'Dermatology'}">Dermatology</option>
+                    <option value="Neurology"        th:selected="${searchSpec == 'Neurology'}">Neurology</option>
+                    <option value="Orthopedics"      th:selected="${searchSpec == 'Orthopedics'}">Orthopedics</option>
+                    <option value="Pediatrics"       th:selected="${searchSpec == 'Pediatrics'}">Pediatrics</option>
+                    <option value="General Medicine" th:selected="${searchSpec == 'General Medicine'}">General Medicine</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Available Day</label>
+                <select name="day">
+                    <option value="">Any Day</option>
+                    <option value="Monday"    th:selected="${searchDay == 'Monday'}">Monday</option>
+                    <option value="Tuesday"   th:selected="${searchDay == 'Tuesday'}">Tuesday</option>
+                    <option value="Wednesday" th:selected="${searchDay == 'Wednesday'}">Wednesday</option>
+                    <option value="Thursday"  th:selected="${searchDay == 'Thursday'}">Thursday</option>
+                    <option value="Friday"    th:selected="${searchDay == 'Friday'}">Friday</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-search">Search</button>
+        </div>
+    </form>
+
+    <!-- Result count -->
+    <div class="result-count" th:if="${!#lists.isEmpty(doctors)}">
+        Showing <span th:text="${#lists.size(doctors)}">0</span> doctor(s)
+    </div>
+
+    <!-- Doctor Cards -->
+    <div class="doctors-grid">
+
+        <div class="empty-state" th:if="${#lists.isEmpty(doctors)}">
+            No doctors found matching your search.
+        </div>
+
+        <div class="doctor-card" th:each="doc : ${doctors}">
+            <div class="doctor-avatar" th:text="${#strings.substring(doc.name,0,1)}">D</div>
+            <div class="doctor-name"   th:text="${doc.name}">Dr. Name</div>
+            <div class="doctor-spec"   th:text="${doc.specialisation}">Specialisation</div>
+
+            <div class="doctor-detail">
+                <span class="key">Phone</span>
+                <span class="val" th:text="${doc.phone}">—</span>
+            </div>
+            <div class="doctor-detail">
+                <span class="key">Available</span>
+                <span class="val" th:text="${doc.availableDays}">—</span>
+            </div>
+
+            <a th:href="@{/patient/book-appointment/{id}(id=${doc.doctorId})}"
+               class="btn-book">Book Appointment</a>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

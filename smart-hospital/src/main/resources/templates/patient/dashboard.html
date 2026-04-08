@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Patient Dashboard – Smart Hospital</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #F0F4F8; color: #111827; }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed; top: 0; left: 0;
+            width: 240px; height: 100vh;
+            background: #0D2B4E; color: #fff;
+            display: flex; flex-direction: column;
+            padding: 0; z-index: 100;
+        }
+        .sidebar-logo {
+            padding: 24px 20px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-logo .icon {
+            width: 40px; height: 40px; background: #1565C0;
+            border-radius: 50%; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 20px; color: #fff; margin-bottom: 8px;
+        }
+        .sidebar-logo h2 { font-size: 15px; font-weight: 700; }
+        .sidebar-logo p  { font-size: 11px; color: #93C5FD; margin-top: 2px; }
+
+        .sidebar nav { flex: 1; padding: 16px 0; }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 20px; font-size: 14px; color: #CBD5E0;
+            text-decoration: none; transition: all 0.2s; cursor: pointer;
+        }
+        .nav-item:hover, .nav-item.active {
+            background: rgba(255,255,255,0.08); color: #fff;
+            border-left: 3px solid #60A5FA;
+        }
+        .nav-icon { width: 20px; text-align: center; font-size: 16px; }
+
+        .sidebar-footer {
+            padding: 16px 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .user-info { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+        .avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: #1565C0; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 700; color: #fff;
+        }
+        .user-name  { font-size: 13px; font-weight: 600; }
+        .user-role  { font-size: 11px; color: #93C5FD; }
+        .btn-logout {
+            display: block; width: 100%; padding: 8px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 6px; color: #CBD5E0;
+            text-align: center; font-size: 13px;
+            text-decoration: none; transition: background 0.2s;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+        /* Main content */
+        .main { margin-left: 240px; padding: 32px; }
+
+        .page-header { margin-bottom: 28px; }
+        .page-header h1 { font-size: 24px; font-weight: 700; color: #0D2B4E; }
+        .page-header p  { font-size: 14px; color: #6B7280; margin-top: 4px; }
+
+        /* Stat cards */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px; margin-bottom: 28px;
+        }
+        .stat-card {
+            background: #fff; border-radius: 10px;
+            border: 1px solid #E5E7EB;
+            padding: 20px; display: flex;
+            align-items: center; gap: 14px;
+        }
+        .stat-icon {
+            width: 48px; height: 48px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px;
+        }
+        .stat-icon.blue   { background: #DBEAFE; }
+        .stat-icon.green  { background: #D1FAE5; }
+        .stat-icon.orange { background: #FEF3C7; }
+        .stat-icon.red    { background: #FEE2E2; }
+        .stat-label { font-size: 12px; color: #6B7280; }
+        .stat-value { font-size: 26px; font-weight: 700; color: #0D2B4E; }
+
+        /* Cards */
+        .card {
+            background: #fff; border-radius: 10px;
+            border: 1px solid #E5E7EB; padding: 24px;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 18px;
+        }
+        .card-title { font-size: 16px; font-weight: 700; color: #0D2B4E; }
+
+        .btn-sm {
+            padding: 7px 16px; border-radius: 7px;
+            font-size: 13px; font-weight: 600;
+            text-decoration: none; display: inline-block;
+            transition: all 0.2s;
+        }
+        .btn-primary-sm {
+            background: #1565C0; color: #fff; border: none; cursor: pointer;
+        }
+        .btn-primary-sm:hover { background: #0D47A1; }
+        .btn-outline-sm {
+            background: transparent; color: #1565C0;
+            border: 1.5px solid #1565C0;
+        }
+        .btn-outline-sm:hover { background: #E3F2FD; }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            text-align: left; font-size: 12px; font-weight: 700;
+            color: #6B7280; text-transform: uppercase;
+            letter-spacing: 0.05em; padding: 10px 14px;
+            border-bottom: 1px solid #E5E7EB;
+            background: #F9FAFB;
+        }
+        td {
+            padding: 12px 14px; font-size: 14px; color: #374151;
+            border-bottom: 1px solid #F3F4F6;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #F9FAFB; }
+
+        /* Status badges */
+        .badge {
+            display: inline-block; padding: 3px 10px;
+            border-radius: 999px; font-size: 12px; font-weight: 600;
+        }
+        .badge-confirmed { background: #D1FAE5; color: #065F46; }
+        .badge-pending   { background: #FEF3C7; color: #92400E; }
+        .badge-cancelled { background: #FEE2E2; color: #991B1B; }
+        .badge-completed { background: #DBEAFE; color: #1E40AF; }
+
+        /* Two column layout */
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+        /* Quick action buttons */
+        .action-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+        }
+        .action-btn {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 20px 12px;
+            background: #F0F4F8; border: 1.5px solid #E5E7EB;
+            border-radius: 10px; text-decoration: none;
+            color: #0D2B4E; transition: all 0.2s; cursor: pointer;
+        }
+        .action-btn:hover { background: #DBEAFE; border-color: #1565C0; }
+        .action-btn .action-icon { font-size: 28px; margin-bottom: 8px; }
+        .action-btn .action-label { font-size: 13px; font-weight: 600; }
+
+        /* Profile info list */
+        .info-list { list-style: none; }
+        .info-list li {
+            display: flex; justify-content: space-between;
+            padding: 10px 0; border-bottom: 1px solid #F3F4F6;
+            font-size: 14px;
+        }
+        .info-list li:last-child { border-bottom: none; }
+        .info-list .key { color: #6B7280; font-weight: 500; }
+        .info-list .val { color: #0D2B4E; font-weight: 600; }
+
+        .empty-state {
+            text-align: center; padding: 32px;
+            color: #9CA3AF; font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="sidebar-logo">
+        <div class="icon">+</div>
+        <h2>Smart Hospital</h2>
+        <p>Patient Portal</p>
+    </div>
+    <nav>
+        <a th:href="@{/patient/dashboard}" class="nav-item active">
+            <span class="nav-icon">&#9632;</span> Dashboard
+        </a>
+        <a th:href="@{/patient/doctors}" class="nav-item">
+            <span class="nav-icon">&#9670;</span> Find Doctors
+        </a>
+        <a th:href="@{/patient/appointments}" class="nav-item">
+            <span class="nav-icon">&#9671;</span> My Appointments
+        </a>
+        <a th:href="@{/patient/medical-records}" class="nav-item">
+            <span class="nav-icon">&#9633;</span> Medical Records
+        </a>
+        <a th:href="@{/patient/bills}" class="nav-item">
+            <span class="nav-icon">&#9651;</span> My Bills
+        </a>
+        <a th:href="@{/patient/profile}" class="nav-item">
+            <span class="nav-icon">&#9675;</span> My Profile
+        </a>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <div class="avatar" th:text="${#strings.substring(patient.name,0,1)}">P</div>
+            <div>
+                <div class="user-name" th:text="${patient.name}">Patient Name</div>
+                <div class="user-role">Patient</div>
+            </div>
+        </div>
+        <a th:href="@{/logout}" class="btn-logout">Sign Out</a>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+    <div class="page-header">
+        <h1>Welcome back, <span th:text="${patient.name}">Patient</span>!</h1>
+        <p>Here is your health summary for today.</p>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-icon blue">&#9670;</div>
+            <div>
+                <div class="stat-label">Total Appointments</div>
+                <div class="stat-value" th:text="${totalAppointments}">0</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green">&#9633;</div>
+            <div>
+                <div class="stat-label">Upcoming</div>
+                <div class="stat-value" th:text="${upcomingAppointments}">0</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange">&#9651;</div>
+            <div>
+                <div class="stat-label">Pending Bills</div>
+                <div class="stat-value" th:text="${pendingBills}">0</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red">&#9632;</div>
+            <div>
+                <div class="stat-label">Medical Records</div>
+                <div class="stat-value" th:text="${totalRecords}">0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions + Profile -->
+    <div class="two-col">
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Quick Actions</div>
+            </div>
+            <div class="action-grid">
+                <a th:href="@{/patient/doctors}" class="action-btn">
+                    <span class="action-icon">&#9670;</span>
+                    <span class="action-label">Book Appointment</span>
+                </a>
+                <a th:href="@{/patient/appointments}" class="action-btn">
+                    <span class="action-icon">&#9671;</span>
+                    <span class="action-label">View Appointments</span>
+                </a>
+                <a th:href="@{/patient/medical-records}" class="action-btn">
+                    <span class="action-icon">&#9633;</span>
+                    <span class="action-label">Medical Records</span>
+                </a>
+                <a th:href="@{/patient/bills}" class="action-btn">
+                    <span class="action-icon">&#9651;</span>
+                    <span class="action-label">Pay Bill</span>
+                </a>
+                <a th:href="@{/patient/profile}" class="action-btn">
+                    <span class="action-icon">&#9675;</span>
+                    <span class="action-label">My Profile</span>
+                </a>
+                <a th:href="@{/patient/doctors}" class="action-btn">
+                    <span class="action-icon">&#9632;</span>
+                    <span class="action-label">Find Doctors</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Profile Summary -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">My Profile</div>
+                <a th:href="@{/patient/profile}" class="btn-sm btn-outline-sm">Edit</a>
+            </div>
+            <ul class="info-list">
+                <li>
+                    <span class="key">Full Name</span>
+                    <span class="val" th:text="${patient.name}">—</span>
+                </li>
+                <li>
+                    <span class="key">Email</span>
+                    <span class="val" th:text="${patient.email}">—</span>
+                </li>
+                <li>
+                    <span class="key">Phone</span>
+                    <span class="val" th:text="${patient.phone}">—</span>
+                </li>
+                <li>
+                    <span class="key">Blood Group</span>
+                    <span class="val" th:text="${patient.bloodGroup}">—</span>
+                </li>
+                <li>
+                    <span class="key">Date of Birth</span>
+                    <span class="val" th:text="${patient.dateOfBirth}">—</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Recent Appointments -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">Recent Appointments</div>
+            <a th:href="@{/patient/appointments}" class="btn-sm btn-outline-sm">View All</a>
+        </div>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(recentAppointments)}">
+            No appointments yet. <a th:href="@{/patient/doctors}" style="color:#1565C0;">Book one now</a>
+        </div>
+
+        <table th:if="${!#lists.isEmpty(recentAppointments)}">
+            <thead>
+                <tr>
+                    <th>Doctor</th>
+                    <th>Specialisation</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="appt : ${recentAppointments}">
+                    <td th:text="${appt.doctorName}">Dr. Name</td>
+                    <td th:text="${appt.specialisation}">Cardiology</td>
+                    <td th:text="${appt.appointmentDate}">2026-04-01</td>
+                    <td th:text="${appt.appointmentTime}">10:30</td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${appt.status == 'CONFIRMED'} ? 'badge-confirmed' :
+                                             (${appt.status == 'PENDING'}   ? 'badge-pending'   :
+                                             (${appt.status == 'CANCELLED'} ? 'badge-cancelled' : 'badge-completed'))"
+                              th:text="${appt.status}">PENDING</span>
+                    </td>
+                    <td>
+                        <a th:href="@{/patient/appointments/{id}(id=${appt.appointmentId})}"
+                           class="btn-sm btn-outline-sm">View</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div><!-- end .main -->
+</body>
+</html>
